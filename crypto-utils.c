@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include "crypto-utils.h"
 
+typedef struct keyAndScore_t 
+{
+  double score;
+  char key; 
+  struct keyAndScore_t * next; //?????
+} keyAndBuf_t;
+
 char hexCharToByte(char aHexChar) {
   if (aHexChar >= '0' && aHexChar <= '9') {
     return aHexChar - '0';
@@ -77,3 +84,32 @@ char * fixedXOR(char * aHexStr, char * bHexStr){
 
   return outBuf;
 }
+
+//Takes in a aHexStr, the length of that buffer, and a key
+//Returns a malloc'd byte buffer that is each character of inBuf
+//XOR'd against key
+char * singleByteXOR (char * inStr, char key){
+  int lenStr = (int) strlen(inStr);
+  int lenBuf = lenStr/2;
+
+  char * inBuf = hexStrToBytes(inStr, &lenStr); 
+
+  char * outBuf = malloc(sizeof(inBuf));
+
+  for (int i = 0; i < lenBuf; i++){
+    outBuf[i] = inBuf[i] ^ key;
+  }
+
+  return outBuf;
+}
+
+//prints method for our bytebuffers, which have no null terminating byte
+void printByteBuf(char * byteBuf, int * len){
+  for (int i = 0; i < *len; i++){
+    printf("%c", byteBuf[i]);
+  }
+  printf("\n");
+}
+
+//Takes in a hex string, generates a list of candidate structs
+
