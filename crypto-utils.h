@@ -6,4 +6,12 @@ char * fixedXOR(char * aHexStr, char * bHexStr);
 
 char * singleByteXOR (char * inStr, char key); 
 
-void printByteBuf(char * byteBuf, int * len);
+char * repeatingKeyXOR(char * inStr, char * key);
+
+void printByteBuf(char * byteBuf, int len);
+
+char singleByteDecrypt(char * inStr);
+
+double bufferScorer(char * inBuf, int len);
+
+void findNeedle(FILE * haystack);

@@ -10,12 +10,7 @@
 static char * aHexStr = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
 
 int main(int argc, char *argv[]){
-	int printLen = 34;
-
-	for (char i = 33; i < (CHAR_MAX); i++){
-		printf("With key %c: ", i);
-		char * candidate = singleByteXOR(aHexStr, i);
-		printByteBuf(candidate, &printLen);
-		free(candidate);
-	}
+	char key = singleByteDecrypt(aHexStr);
+	printf("The key was: %c \nThe message is: ", key);
+	printByteBuf(singleByteXOR(aHexStr, key), strlen(aHexStr)/2);
 }
