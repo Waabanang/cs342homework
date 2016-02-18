@@ -148,7 +148,7 @@ char singleByteDecrypt(char * inStr){
     }
   }
   //Get the lowest scoring
-  char key;
+  char key = -1;
   double lowestScore = INT_MAX;
 
   for (char c = 0; c < CHAR_MAX; c++){
