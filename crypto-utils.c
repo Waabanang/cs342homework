@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "crypto-utils.h"
 
-#define MAX_LINE 61
+#define MAX_LINE 128
 
 char hexCharToByte(char aHexChar) {
   if (aHexChar >= '0' && aHexChar <= '9') {
@@ -113,7 +113,7 @@ char * repeatingKeyXOR(char * inStr, char * key){
 //prints method for our bytebuffers, which have no null terminating byte
 void printByteBuf(char * byteBuf, int len){
   for (int i = 0; i < len; i++){
-    printf("%x", byteBuf[i]);
+    printf("%c", byteBuf[i]);
   }
   printf("\n");
 }
@@ -203,21 +203,20 @@ double bufferScorer(char * inBuf, int len){
 // encrypt that line to the pointer it was passed.
 void findNeedle(FILE * haystack){
   char line[MAX_LINE];
-  int lineNum = 0;
+  memset(line, 0, MAX_LINE);
+  int lineNum = 1;
 
   //Find the bestScoring phrase
-  while(fgets(line, sizeof line, haystack ) != NULL ){
+  while(fgets(line, MAX_LINE, haystack ) != NULL ){
     char possibleKey = singleByteDecrypt(line);
-    int len = strlen(line)/2;
     if (possibleKey){
-      char * possibleMessage = singleByteXOR(line, possibleKey);
-      printf("Line number %d, with key %c, mesage: ", lineNum, possibleKey);
-      printByteBuf(possibleMessage, len);
-      free(possibleMessage);
-      }
+      printf("Line %d, possibleKey is %c, message is:", lineNum, possibleKey);
+      printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
+    }
     lineNum++;
   }
 }
+
 
 
 
