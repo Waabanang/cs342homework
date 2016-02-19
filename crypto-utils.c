@@ -62,9 +62,7 @@ char* hexStrToBytes(char* aHexStr, int* aOutLen) {
 // Outputs a malloc'd byte buffer that's xors together
 char * fixedXOR(char * aHexStr, char * bHexStr){
   if (strlen(aHexStr) != strlen(bHexStr)){ 
-    printf("Input not of equal length /n");
-    exit(1);
-  }
+    printf("Input not of equal length /n"); exit(1); }
 
   int len = (int) strlen(aHexStr);
 
@@ -91,7 +89,7 @@ char * singleByteXOR (char * inStr, char key){
 
   char * inBuf = hexStrToBytes(inStr, &lenStr); 
 
-  char * outBuf = malloc(sizeof(inBuf));
+  char * outBuf = malloc(lenStr);
 
 
   for (int i = 0; i < lenBuf; i++){
@@ -127,16 +125,16 @@ char singleByteDecrypt(char * inStr){
   bool * candidateKeys = malloc(sizeof(bool) * CHAR_MAX);
   double * scores = malloc(sizeof(double) * CHAR_MAX); 
 
+    char* candidate = "                                                                                                                                              ";
   //Exclusion step
   for (char c = 0; c < CHAR_MAX; c++){
-    char * candidate = singleByteXOR(inStr, c);
+    candidate = singleByteXOR(inStr, c);
     candidateKeys[c] = true;
     for (int i = 0; i < lenBuf; i++){
       if (candidate[i] < 32 || candidate[i] > 122){
         candidateKeys[c] = false;
       }
     }
-    free(candidate);
   }
 
   //Scoring step
@@ -172,16 +170,18 @@ double bufferScorer(char * inBuf, int len){
   double expectedFreq[27] = {19.18, 8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015,
     6.094, 6.966, 0.153, 0.772, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095,
     5.987, 6.327, 9.056, 2.758, 0.978, 2.391, 0.150, 1.974, 0.074};
-  int * count = malloc(sizeof(expectedFreq));
-  memset(count, 0, sizeof(expectedFreq));
+  int * count = malloc(27 * sizeof(int));
+    for (int i = 0; i < 27; i++) {
+        count[i] = 0;
+    }
 
   int ignored = 0; 
   for (int c = 0; c < len; c++){
     char current_character = inBuf[c];
     if (current_character >= 'A' && current_character <= 'Z'){
-      count[current_character - ('A' + 1)]++; 
+      count[current_character - ('A') +1]++; 
     } else if(current_character >= 'a' && current_character <= 'z'){
-      count[current_character - ('a' + 1)]++;
+      count[current_character - ('a') +1]++;
     } else if(current_character == ' '){
       count[0]++;
     }
@@ -210,6 +210,7 @@ void findNeedle(FILE * haystack){
 
   //Find the bestScoring phrase
   while(fgets(line, MAX_LINE, haystack ) != NULL ){
+    printf("bloop\n");
     line[strcspn(line, "\n")] = 0;
     char possibleKey = singleByteDecrypt(line);
     if (possibleKey > 0){
