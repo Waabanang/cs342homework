@@ -90,7 +90,9 @@ char * singleByteXOR (char * inStr, char key){
   int lenBuf = lenStr/2;
 
   char * inBuf = hexStrToBytes(inStr, &lenStr); 
+
   char * outBuf = malloc(sizeof(inBuf));
+
 
   for (int i = 0; i < lenBuf; i++){
     outBuf[i] = inBuf[i] ^ key;
@@ -208,8 +210,9 @@ void findNeedle(FILE * haystack){
 
   //Find the bestScoring phrase
   while(fgets(line, MAX_LINE, haystack ) != NULL ){
+    line[strcspn(line, "\n")] = 0;
     char possibleKey = singleByteDecrypt(line);
-    if (possibleKey){
+    if (possibleKey > 0){
       printf("Line %d, possibleKey is %c, message is:", lineNum, possibleKey);
       printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
     }
