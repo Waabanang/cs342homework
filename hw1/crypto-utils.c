@@ -95,7 +95,7 @@ char * singleByteXOR (char * inStr, char key){
   for (int i = 0; i < lenBuf; i++){
     outBuf[i] = inBuf[i] ^ key;
   }
-
+  free(inBuf);
   return outBuf;
 }
 // Expects that both key and inStr are proper strings
@@ -125,13 +125,13 @@ char singleByteDecrypt(char * inStr){
   bool * candidateKeys = malloc(sizeof(bool) * CHAR_MAX);
   double * scores = malloc(sizeof(double) * CHAR_MAX); 
 
-    char* candidate = "                                                                                                                                              ";
+  char* candidate;
   //Exclusion step
   for (char c = 0; c < CHAR_MAX; c++){
     candidate = singleByteXOR(inStr, c);
     candidateKeys[c] = true;
     for (int i = 0; i < lenBuf; i++){
-      if (candidate[i] < 32 || candidate[i] > 122){
+      if (candidate[i] < 32 || candidate[i] > 127){
         candidateKeys[c] = false;
       }
     }
@@ -210,13 +210,12 @@ void findNeedle(FILE * haystack){
 
   //Find the bestScoring phrase
   while(fgets(line, MAX_LINE, haystack ) != NULL ){
-    printf("bloop\n");
     line[strcspn(line, "\n")] = 0;
     char possibleKey = singleByteDecrypt(line);
     if (possibleKey > 0){
-      printf("Line %d, possibleKey is %c, message is:", lineNum, possibleKey);
+      printf("Line %d: %s \n possibleKey is %d;%c, message is:", lineNum, line, possibleKey,possibleKey);
       printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
-    }
+    } 
     lineNum++;
   }
 }
