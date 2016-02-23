@@ -58,24 +58,14 @@ char* hexStrToBytes(char* aHexStr, int* aOutLen) {
 
   return outBuf;
 }
-// Takes in HEX STRINGS
+// Takes in bytebuffers
 // Outputs a malloc'd byte buffer that's xors together
-char * fixedXOR(char * aHexStr, char * bHexStr){
-  if (strlen(aHexStr) != strlen(bHexStr)){ 
-    printf("Input not of equal length /n"); exit(1); }
-
-  int len = (int) strlen(aHexStr);
-
-  char * aBuf = hexStrToBytes(aHexStr, &len);
-  char * bBuf = hexStrToBytes(bHexStr, &len);
-  char * outBuf = malloc(sizeof(aBuf));
+char * fixedXOR(char * aBuf, char * bBuf, int len){
+  char * outBuf = malloc(len);
 
   for (int i = 0; i < len/2; i++){
     outBuf[i] = aBuf[i] ^ bBuf[i];
   }
-
-  free(aBuf);
-  free(bBuf);
 
   return outBuf;
 }
