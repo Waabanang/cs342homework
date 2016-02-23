@@ -13,8 +13,8 @@ static char * stringC = "746865206b696420646f6e277420706c6179";
 int main(int argc, char * arg[]){
 	int lenA, lenB, lenC;
 
-	char * bufferA = hexStrToBytes(stringA, &lenB);
-	char * bufferB = hexStrToBytes(stringB, &lenA); 
+	char * bufferA = hexStrToBytes(stringA, &lenA);
+	char * bufferB = hexStrToBytes(stringB, &lenB);
 
 	if (lenA != lenB){
 		printf("%s\n", "lengths don't match");
@@ -24,7 +24,10 @@ int main(int argc, char * arg[]){
 	char * test = fixedXOR(bufferA, bufferB, lenA);
 	char * answer = hexStrToBytes(stringC, &lenC);
 
-	if (memcmp(test, answer, lenA)){
+	printByteBuf(answer, lenC);
+	printByteBuf(test, lenA);
+
+	if (memcmp(test, answer, lenC) == 0){
 		printf("success! \n");
 	} else {
 		printf("failure.\n");

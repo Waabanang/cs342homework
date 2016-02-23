@@ -63,7 +63,7 @@ char* hexStrToBytes(char* aHexStr, int* aOutLen) {
 char * fixedXOR(char * aBuf, char * bBuf, int len){
   char * outBuf = malloc(len);
 
-  for (int i = 0; i < len/2; i++){
+  for (int i = 0; i < len; i++){
     outBuf[i] = aBuf[i] ^ bBuf[i];
   }
 
@@ -73,19 +73,12 @@ char * fixedXOR(char * aBuf, char * bBuf, int len){
 //Takes in a aHexStr, the length of that buffer, and a key
 //Returns a malloc'd byte buffer that is each character of inBuf
 //XOR'd against key
-char * singleByteXOR (char * inStr, char key){
-  int lenStr = (int) strlen(inStr);
-  int lenBuf = lenStr/2;
-
-  char * inBuf = hexStrToBytes(inStr, &lenStr); 
-
-  char * outBuf = malloc(lenStr);
-
-
-  for (int i = 0; i < lenBuf; i++){
+char * singleByteXOR (char * inBuf, char key, int len){
+  char * outBuf = malloc(len);
+  for (int i = 0; i < len; i++){
     outBuf[i] = inBuf[i] ^ key;
   }
-  free(inBuf);
+
   return outBuf;
 }
 // Expects that both key and inStr are proper strings
@@ -109,34 +102,35 @@ void printByteBuf(char * byteBuf, int len){
 }
 
 //Takes in a hex string, generates a list of candidate structs
-char singleByteDecrypt(char * inStr){
-  int lenStr = (int) strlen(inStr);
-  int lenBuf = lenStr/2;
-  bool * candidateKeys = malloc(sizeof(bool) * CHAR_MAX);
-  double * scores = malloc(sizeof(double) * CHAR_MAX); 
+char singleByteDecrypt(char * inBuff, int len){
+
+  bool * candidateKeys = malloc(sizeof(bool) * CHAR_MAX);//is this okay???
+  double * scores = malloc(sizeof(double) * CHAR_MAX); //is this okay???
 
   char* candidate;
   //Exclusion step
   for (char c = 0; c < CHAR_MAX; c++){
-    candidate = singleByteXOR(inStr, c);
+    candidate = singleByteXOR(inBuff, c, len);
     candidateKeys[c] = true;
-    for (int i = 0; i < lenBuf; i++){
+    for (int i = 0; i < len; i++){
       if (candidate[i] < 32 || candidate[i] > 127){
         candidateKeys[c] = false;
       }
     }
-  }
+  }free(candidate);//is this fine?
 
   //Scoring step
   for (char c = 0; c < CHAR_MAX; c++){
     if (candidateKeys[c]){
-      char * phrase = singleByteXOR(inStr, c);
-      scores[c] = bufferScorer(phrase, lenBuf);
-      free(phrase);
+      char * phrase = singleByteXOR(inBuff, c, len);
+      scores[c] = bufferScorer(phrase, len);
+      free(phrase);//I free phrase here, is that fine?
     } else {
       scores[c] = INT_MAX;
     }
   }
+
+
   //Get the lowest scoring
   char key = -1;
   double lowestScore = INT_MAX;
@@ -190,25 +184,25 @@ double bufferScorer(char * inBuf, int len){
   return score;
 }
 
-// Takes in a file, and pointer to a key and returns the line 
-// which is encrypted on that file, and saves the key used to
-// encrypt that line to the pointer it was passed.
-void findNeedle(FILE * haystack){
-  char line[MAX_LINE];
-  memset(line, 0, MAX_LINE);
-  int lineNum = 1;
+// // Takes in a file, and pointer to a key and returns the line 
+// // which is encrypted on that file, and saves the key used to
+// // encrypt that line to the pointer it was passed.
+// void findNeedle(FILE * haystack){
+//   char line[MAX_LINE];
+//   memset(line, 0, MAX_LINE);
+//   int lineNum = 1;
 
-  //Find the bestScoring phrase
-  while(fgets(line, MAX_LINE, haystack ) != NULL ){
-    line[strcspn(line, "\n")] = 0;
-    char possibleKey = singleByteDecrypt(line);
-    if (possibleKey > 0){
-      printf("Line %d: %s \n possibleKey is %d;%c, message is:", lineNum, line, possibleKey,possibleKey);
-      printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
-    } 
-    lineNum++;
-  }
-}
+//   //Find the bestScoring phrase
+//   while(fgets(line, MAX_LINE, haystack ) != NULL ){
+//     line[strcspn(line, "\n")] = 0;
+//     char possibleKey = singleByteDecrypt(line);
+//     if (possibleKey > 0){
+//       printf("Line %d: %s \n possibleKey is %d;%c, message is:", lineNum, line, possibleKey,possibleKey);
+//       printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
+//     } 
+//     lineNum++;
+//   }
+// }
 
 
 

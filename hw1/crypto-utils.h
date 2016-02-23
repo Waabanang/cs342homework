@@ -2,16 +2,16 @@ char hexCharToByte(char aHexChar);
 
 char* hexStrToBytes(char* aHexStr, int* aOutLen);
 
-char * fixedXOR(char * aHexStr, char * bHexStr,  int len);
+char * fixedXOR(char * aByteBuff, char * bByteBuff,  int len);
 
-char * singleByteXOR (char * inStr, char key); 
+char * singleByteXOR (char * inBuff, char key, int len); 
 
 char * repeatingKeyXOR(char * inStr, char * key);
 
 void printByteBuf(char * byteBuf, int len);
 
-char singleByteDecrypt(char * inStr);
+char singleByteDecrypt(char * byteBuf, int len);
 
 double bufferScorer(char * inBuf, int len);
 
-void findNeedle(FILE * haystack);
+//void findNeedle(FILE * haystack);
