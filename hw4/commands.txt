@@ -1,0 +1,12 @@
+1. sudo make all
+-compile the module, outputs hello.ko
+2. sudo insmod module.ko 
+-to load our module
+3. lsmod | grep hello
+-to confirm that out module is listed (screenshot1)
+4. dmesg -l debug | grep Hello
+-shows that we’re printing to debug (screenshot2)
+5. rmmod hello
+-removes our module
+6. dmesg -l notive| grep Goodbye
+-I had the exit message print to notice (screenshot3)
