@@ -9,7 +9,9 @@
 // Compile with: gcc -std=c99 challenge4.c crypto-utils.c -g -o challenge4
 
 int main(int argc, char *argv[]){
+	int line;
+	char key;
 	static const char filename[] = "haystack.txt";
 	FILE *haystack = fopen ( filename, "r" );
-	findNeedle(haystack);
-	}
+	findNeedle(haystack, &line, &key);
+}

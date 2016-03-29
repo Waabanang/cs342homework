@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "crypto-utils.h"
 
 #define MAX_LINE 128
@@ -81,12 +82,13 @@ char * singleByteXOR (char * inBuf, char key, int len){
 
   return outBuf;
 }
-// Expects that both key and inStr are proper strings
+// expects strings in!
 //
-char * repeatingKeyXOR(char * inStr, char * key){
-  char * outBuf = malloc(sizeof(strlen(inStr)));
-
-  for (int i = 0; i < strlen(inStr); i++){
+char * repeatingKeyXOR(char * inStr, char * key, int * len){
+  *len = strlen(inStr);
+  char * outBuf = malloc(*len);
+  
+  for (int i = 0; i < *len; i++){
     outBuf[i] = inStr[i] ^ key[i % strlen(key)];
   }
 
@@ -101,51 +103,39 @@ void printByteBuf(char * byteBuf, int len){
   printf("\n");
 }
 
+void printByteBufHex(char * byteBuf, int len){
+  for (int i = 0; i < len; i++){
+    printf("%x", byteBuf[i]);
+  }
+  printf("\n");
+}
+
 //Takes in a hex string, generates a list of candidate structs
 char singleByteDecrypt(char * inBuff, int len){
-
-  bool * candidateKeys = malloc(sizeof(bool) * CHAR_MAX);//is this okay???
   double * scores = malloc(sizeof(double) * CHAR_MAX); //is this okay???
-
-  char* candidate;
-  //Exclusion step
-  for (char c = 0; c < CHAR_MAX; c++){
-    candidate = singleByteXOR(inBuff, c, len);
-    candidateKeys[c] = true;
-    for (int i = 0; i < len; i++){
-      if (candidate[i] < 32 || candidate[i] > 127){
-        candidateKeys[c] = false;
-      }
-    }
-  }free(candidate);//is this fine?
 
   //Scoring step
   for (char c = 0; c < CHAR_MAX; c++){
-    if (candidateKeys[c]){
-      char * phrase = singleByteXOR(inBuff, c, len);
-      scores[c] = bufferScorer(phrase, len);
-      free(phrase);//I free phrase here, is that fine?
-    } else {
-      scores[c] = INT_MAX;
-    }
+    char * phrase = singleByteXOR(inBuff, c, len);
+    scores[c] = bufferScorer(phrase, len);
+    free(phrase);//I free phrase here, is that fine?
   }
-
 
   //Get the lowest scoring
   char key = -1;
   double lowestScore = INT_MAX;
+  int n = 0;
+  int bestI = 0;
 
   for (char c = 0; c < CHAR_MAX; c++){
-    if (candidateKeys[c]){
-      if (scores[c] < lowestScore){
-        lowestScore = scores[c];
-        key = c;
-      }
+    if (scores[c] < lowestScore){
+      lowestScore = scores[c];
+      key = c;
+      bestI = n;
     }
+    n++;
   }
-
   //Clean up
-  free(candidateKeys);
   free(scores);
   return key;
 }
@@ -154,7 +144,7 @@ double bufferScorer(char * inBuf, int len){
   double expectedFreq[27] = {19.18, 8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015,
     6.094, 6.966, 0.153, 0.772, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095,
     5.987, 6.327, 9.056, 2.758, 0.978, 2.391, 0.150, 1.974, 0.074};
-  int * count = malloc(27 * sizeof(int));
+    int * count = malloc(27 * sizeof(int));
     for (int i = 0; i < 27; i++) {
         count[i] = 0;
     }
@@ -169,8 +159,10 @@ double bufferScorer(char * inBuf, int len){
     } else if(current_character == ' '){
       count[0]++;
     }
-      else{
+      else if(isascii(current_character) != 0){
       ignored++;
+    } else{
+      return INT_MAX;
     }
   }
 
@@ -184,25 +176,40 @@ double bufferScorer(char * inBuf, int len){
   return score;
 }
 
-// // Takes in a file, and pointer to a key and returns the line 
-// // which is encrypted on that file, and saves the key used to
-// // encrypt that line to the pointer it was passed.
-// void findNeedle(FILE * haystack){
-//   char line[MAX_LINE];
-//   memset(line, 0, MAX_LINE);
-//   int lineNum = 1;
+// Takes in a file, and pointer to a key and returns the line 
+// which is encrypted on that file, and saves the key used to
+// encrypt that line to the pointer it was passed.
+void findNeedle(FILE * haystack, int * needleLine, char * key){
+  char line[MAX_LINE];
+  memset(line, 0, MAX_LINE);
+  int lineNum = 1;
+  double lowestScore = INT_MAX;
+  char * encodedBuffer;
 
-//   //Find the bestScoring phrase
-//   while(fgets(line, MAX_LINE, haystack ) != NULL ){
-//     line[strcspn(line, "\n")] = 0;
-//     char possibleKey = singleByteDecrypt(line);
-//     if (possibleKey > 0){
-//       printf("Line %d: %s \n possibleKey is %d;%c, message is:", lineNum, line, possibleKey,possibleKey);
-//       printByteBuf(singleByteXOR(line, possibleKey), strlen(line)/2);
-//     } 
-//     lineNum++;
-//   }
-// }
+ 
+
+  //Find the bestScoring phrase
+  while(fgets(line, MAX_LINE, haystack ) != NULL ){
+    line[strcspn(line, "\n")] = 0;
+    int len;
+    char * buffer = hexStrToBytes(line, &len);
+    char possibleKey = singleByteDecrypt(buffer, len);
+    if (possibleKey > -1){
+      double score = bufferScorer(buffer, len);
+      if (score < lowestScore){
+        lowestScore = score;
+        * needleLine = lineNum;
+        * key = possibleKey;
+        encodedBuffer = buffer;
+        printf("Found message on line: %d, key was: %x, scored: %f\n", lineNum, possibleKey, score);
+        printf("Message might be:");
+        printByteBuf(singleByteXOR(encodedBuffer, possibleKey, len), len);
+      }
+    } lineNum++;
+    free(buffer);
+  }
+ 
+}
 
 
 

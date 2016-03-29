@@ -15,5 +15,8 @@ int main(int argc, char *argv[]){
 	char * aByteBuff = hexStrToBytes(aHexStr, &len);
 	char key = singleByteDecrypt(aByteBuff, len);
 	printf("The key was: %c \nThe message is: ", key);
-	printByteBuf(singleByteXOR(aByteBuff, key, len), len);
+	char * result = singleByteXOR(aByteBuff, key, len);
+	printByteBuf(result, len);
+
+	free(result);
 }
