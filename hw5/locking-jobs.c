@@ -22,6 +22,7 @@
 // $ ./locking-jobs | uniq -d
 
 #define THREAD_COUNT 2
+pthread_mutex_t joblock; //declare lock globally so we can use it across functions
 
 int64_t jobs_available = 1000000;
 
@@ -36,12 +37,14 @@ void *do_jobs(void *thread_id)
 {
   int64_t current_job = 0;
   while (true) {
+    pthread_mutex_lock(&joblock);
     current_job = jobs_available;
+
+    jobs_available--;
+    pthread_mutex_unlock(&joblock);
     if (current_job < 1) {
       break;
     }
-    jobs_available--;
-
     do_job(current_job);
   }
 
@@ -50,6 +53,11 @@ void *do_jobs(void *thread_id)
 
 int main(int argc, char **argv) {
   pthread_t threads[THREAD_COUNT];
+
+  if (pthread_mutex_init(&joblock, NULL) != 0){ //initialize lock, print message if it fails
+        printf("\n mutex init failed\n");
+    }
+
   for (int i = 0; i < THREAD_COUNT; i++) {
     if (pthread_create(&threads[i], NULL, do_jobs, (void*)(long)i) != 0) {
       printf("Thread creation error!\n");
@@ -60,5 +68,6 @@ int main(int argc, char **argv) {
     pthread_join(threads[i], NULL);
   }
 
+  pthread_mutex_destroy(&joblock); //destroy the lock after we're done with it
   return 0;
 }
